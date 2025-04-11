@@ -31,4 +31,12 @@ public class CommentService {
     public boolean deleteComment(int commentId) throws SQLException {
         return commentDao.deleteComment(commentId);
     }
+    
+    public boolean addComment(int ticketId, int userId, String message) throws SQLException {
+        return commentDao.addComment(ticketId, userId, message);
+    }
+
+    public List<Comment> getCommentsForTicket(int ticketId) throws SQLException {
+        return commentDao.getCommentsByTicketId(ticketId);
+    }
 }

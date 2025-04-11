@@ -39,7 +39,7 @@ public class AdminTicketTableModel extends AbstractTableModel {
             case 3 -> ticket.getPriority();
             case 4 -> ticket.getCreatedBy().getFullName();
             case 5 -> ticket.getCreatedAt().toString();
-            case 6 -> ticket.getUpdatedAt().toString();
+            case 6 -> ticket.getUpdatedAt() != null ? ticket.getUpdatedAt().toString() : "N/A";
             default -> null;
         };
     }

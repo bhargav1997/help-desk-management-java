@@ -3,7 +3,6 @@ package view;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class AssignButtonColumn extends AbstractCellEditor 
         implements TableCellRenderer, TableCellEditor {

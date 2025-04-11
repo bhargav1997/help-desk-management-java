@@ -3,6 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package view;
+import dao.CommentDAO;
+import dao.CommentDAOImpl;
 import java.sql.Connection;
 import dao.DatabaseConnection;
 import dao.TicketDAOImpl;
@@ -14,7 +16,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import model.enums.Role;
-import dao.TicketDAO;
+import service.CommentService;
 import service.TicketService;
 
 /**
@@ -26,6 +28,7 @@ public class LoginView extends JFrame {
     private JPasswordField passwordField;
     private AuthService authService;
     private TicketService ticketService;
+    private CommentService commentService;
 
     public LoginView(AuthService authService) {
         this.authService = authService;
@@ -106,12 +109,15 @@ public class LoginView extends JFrame {
             Connection conn = DatabaseConnection.getConnection();
             AuthService authService = new AuthService(new UserDAOImpl(conn));
             TicketService ticketService = new TicketService(new TicketDAOImpl(conn));
+            CommentDAO commentDAO = new CommentDAOImpl(conn);
+            CommentService commentService = new CommentService(commentDAO); // ✅ initialize here
 
             if (user.getRole() == Role.ADMIN) {
-                new AdminDashboard(user, authService, ticketService).setVisible(true);
+                new AdminDashboard(user, authService, ticketService, commentService).setVisible(true); // ✅ now not null
             } else {
-                new UserDashboard(user, authService, ticketService).setVisible(true);
+                new UserDashboard(user, authService, ticketService, commentService).setVisible(true);
             }
+
             dispose();
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this,
@@ -119,4 +125,5 @@ public class LoginView extends JFrame {
                 "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 }

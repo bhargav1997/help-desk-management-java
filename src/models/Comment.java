@@ -7,11 +7,14 @@ import java.time.LocalDateTime;
 
 public class Comment {
     private int commentId;
+    private int ticketId;
     private Ticket ticket;
     private User user;
     private String message;
     private LocalDateTime createdAt;
 
+    public Comment(){}
+    
     public Comment(int commentID, Ticket ticket, User user, String message, LocalDateTime createdAT){
         this.commentId = commentID;
         this.ticket = ticket;
@@ -35,6 +38,16 @@ public class Comment {
     public void setCommentId(int commentId) {
         this.commentId = commentId;
     }
+
+    public int getTicketId() {
+        return ticketId;
+    }
+
+    public void setTicketId(int ticketId) {
+        this.ticketId = ticketId;
+    }
+    
+    
 
     public Ticket getTicket() {
         return ticket;

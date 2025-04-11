@@ -5,6 +5,7 @@ import models.User;
 import model.enums.Status;
 import model.enums.Priority;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import model.enums.Role;
@@ -86,6 +87,7 @@ public List<User> getAllAdmins() throws SQLException {
         return tickets;
     }
 
+    // For getting tickets by user ID (int)
     @Override
     public List<Ticket> getTicketsByUser(int userId) throws SQLException {
         List<Ticket> tickets = new ArrayList<>();
@@ -93,16 +95,86 @@ public List<User> getAllAdmins() throws SQLException {
                     "FROM Ticket t " +
                     "LEFT JOIN User u1 ON t.created_by = u1.user_id " +
                     "LEFT JOIN User u2 ON t.assigned_to = u2.user_id " +
-                    "WHERE t.created_by = ?";
-        
+                    "WHERE t.created_by = ? OR t.assigned_to = ?";
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, userId);
+            stmt.setInt(2, userId);
+
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 tickets.add(extractTicketFromResultSet(rs));
             }
         }
         return tickets;
+    }
+
+    // For getting unassigned tickets
+    public List<Ticket> getUnassignedTickets() throws SQLException {
+        List<Ticket> tickets = new ArrayList<>();
+        String sql = "SELECT t.*, u1.full_name as creator_name " +
+                    "FROM Ticket t " +
+                    "LEFT JOIN User u1 ON t.created_by = u1.user_id " +
+                    "WHERE t.assigned_to IS NULL";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                tickets.add(extractTicketFromResultSetForUser(rs));
+            }
+        }
+        return tickets;
+    }
+    private Ticket extractTicketFromResultSetForUser(ResultSet rs) throws SQLException {
+        // First create basic Ticket object with direct fields
+        Ticket ticket = new Ticket();
+        ticket.setTicketId(rs.getInt("ticket_id"));
+        ticket.setTitle(getStringOrNull(rs, "title"));
+        ticket.setDescription(getStringOrNull(rs, "description"));
+
+        // Handle status enum
+        String statusStr = getStringOrNull(rs, "status");
+        if (statusStr != null) {
+            ticket.setStatus(Status.valueOf(statusStr));
+        }
+
+        // Handle priority enum
+        String priorityStr = getStringOrNull(rs, "priority");
+        if (priorityStr != null) {
+            ticket.setPriority(Priority.valueOf(priorityStr));
+        }
+
+        // Handle timestamps
+        ticket.setCreatedAt(getLocalDateTimeOrNull(rs, "created_at"));
+        ticket.setUpdatedAt(getLocalDateTimeOrNull(rs, "updated_at"));
+
+        // Handle createdBy user
+        User createdBy = new User();
+        createdBy.setUserId(rs.getInt("created_by"));
+        createdBy.setFullName(getStringOrNull(rs, "creator_name"));
+        ticket.setCreatedBy(createdBy);
+
+        // Handle assignedTo user (may be null)
+        if (rs.getObject("assigned_to") != null) {
+            User assignedTo = new User();
+            assignedTo.setUserId(rs.getInt("assigned_to"));
+            assignedTo.setFullName(getStringOrNull(rs, "assignee_name"));
+            ticket.setAssignedTo(assignedTo);
+        }
+
+        return ticket;
+    }
+
+    // Helper method to safely get String values that might be NULL
+    private String getStringOrNull(ResultSet rs, String columnName) throws SQLException {
+        String value = rs.getString(columnName);
+        return rs.wasNull() ? null : value;
+    }
+
+    // Helper method to safely convert Timestamp to LocalDateTime
+    private LocalDateTime getLocalDateTimeOrNull(ResultSet rs, String columnName) throws SQLException {
+        Timestamp timestamp = rs.getTimestamp(columnName);
+        return timestamp != null ? timestamp.toLocalDateTime() : null;
     }
 
     @Override
@@ -127,11 +199,12 @@ public List<User> getAllAdmins() throws SQLException {
     @Override
     public List<Ticket> getTicketsAssignedTo(int userId) throws SQLException {
         List<Ticket> tickets = new ArrayList<>();
-        String sql = "SELECT t.*, u1.full_name as creator_name " +
+        String sql = "SELECT t.*, u1.full_name as creator_name, u2.full_name as assignee_name " +
                     "FROM Ticket t " +
-                    "JOIN User u1 ON t.created_by = u1.user_id " +
+                    "LEFT JOIN User u1 ON t.created_by = u1.user_id " +
+                    "LEFT JOIN User u2 ON t.assigned_to = u2.user_id " +
                     "WHERE t.assigned_to = ?";
-        
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
@@ -205,50 +278,93 @@ public List<User> getAllAdmins() throws SQLException {
         }
     }
 
-    private Ticket extractTicketFromResultSet(ResultSet rs) throws SQLException {
-         Ticket ticket = new Ticket();
-    ticket.setTicketId(rs.getInt("ticket_id"));
-        // Debug by printing all available columns first
-            ResultSetMetaData metaData = rs.getMetaData();
-            for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                System.out.println("Column " + i + ": " + metaData.getColumnName(i));
-            }
-
-            // Then proceed with your existing extraction logic
-            User createdBy = new User();
-            createdBy.setUserId(rs.getInt("created_by"));
-        createdBy.setFullName(rs.getString("creator_name"));
-        
-        User assignedTo = null;
-        if (rs.getObject("assigned_to") != null) {
-            assignedTo = new User();
-            assignedTo.setUserId(rs.getInt("assigned_to"));
-          //  assignedTo.setFullName(rs.getString("assignee_name"));
-        }
-        
-//        // Handle assigned_to
-//        if (rs.getObject("assigned_to") != null) {
-//            User assignedTo = new User();
-//            assignedTo.setUserId(rs.getInt("assigned_to"));
-//            // If you join with User table to get admin details:
-//            if (columnExists(rs, "assigned_name")) {
-//                assignedTo.setFullName(rs.getString("assigned_name"));
+//    private Ticket extractTicketFromResultSet(ResultSet rs) throws SQLException {
+//         Ticket ticket = new Ticket();
+//    ticket.setTicketId(rs.getInt("ticket_id"));
+//        // Debug by printing all available columns first
+//            ResultSetMetaData metaData = rs.getMetaData();
+//            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+//                System.out.println("Column " + i + ": " + metaData.getColumnName(i));
 //            }
-//            ticket.setAssignedTo(assignedTo);
+//
+//            // Then proceed with your existing extraction logic
+//            User createdBy = new User();
+//            createdBy.setUserId(rs.getInt("created_by"));
+//        createdBy.setFullName(rs.getString("creator_name"));
+//        
+//        User assignedTo = null;
+//        if (rs.getObject("assigned_to") != null) {
+//            assignedTo = new User();
+//            assignedTo.setUserId(rs.getInt("assigned_to"));
+//            if(rs.getString("assignee_name") != null) {
+//              assignedTo.setFullName(rs.getString("assignee_name"));
+//            }
 //        }
-        
-        return new Ticket(
-            rs.getInt("ticket_id"),
-            rs.getString("title"),
-            rs.getString("description"),
-            Status.valueOf(rs.getString("status")),
-            Priority.valueOf(rs.getString("priority")),
-            rs.getTimestamp("created_at").toLocalDateTime(),
-            rs.getTimestamp("updated_at").toLocalDateTime(),
-            createdBy,
-            assignedTo
-        );
+//        
+////        // Handle assigned_to
+////        if (rs.getObject("assigned_to") != null) {
+////            User assignedTo = new User();
+////            assignedTo.setUserId(rs.getInt("assigned_to"));
+////            // If you join with User table to get admin details:
+////            if (columnExists(rs, "assigned_name")) {
+////                assignedTo.setFullName(rs.getString("assigned_name"));
+////            }
+////            ticket.setAssignedTo(assignedTo);
+////        }
+//        
+//        return new Ticket(
+//            rs.getInt("ticket_id"),
+//            rs.getString("title"),
+//            rs.getString("description"),
+//            Status.valueOf(rs.getString("status")),
+//            Priority.valueOf(rs.getString("priority")),
+//            rs.getTimestamp("created_at").toLocalDateTime(),
+//            rs.getTimestamp("updated_at").toLocalDateTime(),
+//            createdBy,
+//            assignedTo
+//        );
+//    }
+    
+    private Ticket extractTicketFromResultSet(ResultSet rs) throws SQLException {
+    Ticket ticket = new Ticket();
+    ticket.setTicketId(rs.getInt("ticket_id"));
+    ticket.setTitle(rs.getString("title"));
+    ticket.setDescription(rs.getString("description"));
+    
+    // Handle status enum
+    String statusStr = rs.getString("status");
+    if (statusStr != null) {
+        ticket.setStatus(Status.valueOf(statusStr));
     }
+    
+    // Handle priority enum
+    String priorityStr = rs.getString("priority");
+    if (priorityStr != null) {
+        ticket.setPriority(Priority.valueOf(priorityStr));
+    }
+    
+    // Handle timestamps
+    ticket.setCreatedAt(rs.getTimestamp("created_at") != null ? 
+                       rs.getTimestamp("created_at").toLocalDateTime() : null);
+    ticket.setUpdatedAt(rs.getTimestamp("updated_at") != null ? 
+                       rs.getTimestamp("updated_at").toLocalDateTime() : null);
+    
+    // Handle createdBy user
+    User createdBy = new User();
+    createdBy.setUserId(rs.getInt("created_by"));
+    createdBy.setFullName(rs.getString("creator_name"));
+    ticket.setCreatedBy(createdBy);
+    
+    // Handle assignedTo user (may be null)
+    if (rs.getObject("assigned_to") != null) {
+        User assignedTo = new User();
+        assignedTo.setUserId(rs.getInt("assigned_to"));
+        assignedTo.setFullName(rs.getString("assignee_name"));
+        ticket.setAssignedTo(assignedTo);
+    }
+    
+    return ticket;
+}
 
         // In TicketDAOImpl
         @Override
@@ -272,3 +388,4 @@ public List<User> getAllAdmins() throws SQLException {
             return false;
         }
 }
+

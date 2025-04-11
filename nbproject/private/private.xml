@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/LoginView.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/AdminTicketTableModel.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/dao/TicketDAOImpl.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/UserDashboard.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/service/TicketService.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/dao/CommentDAOImpl.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/TicketTableModel.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/AssignButtonColumn.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/models/User.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/dao/CommentDAO.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/AdminDashboard.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/helpdesk/HelpDesk.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/models/Comment.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/view/UserTicketDetailsDialog.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/service/CommentService.java</file>
+            <file>file:/D:/SaskPoly/Java/HelpDeskManagement/HelpDesk/src/models/Ticket.java</file>
+        </group>
+    </open-files>
+</project-private>

@@ -10,17 +10,20 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.util.List;
+import service.CommentService;
 
 public class AdminDashboard extends JFrame {
     private final User currentAdmin;
     private final TicketService ticketService;
     private JTable ticketsTable;
     private final AuthService authService;
+    private final CommentService commentService;
 
-    public AdminDashboard(User admin, AuthService authService, TicketService ticketService) {
+    public AdminDashboard(User admin, AuthService authService, TicketService ticketService, CommentService commentService) {
         this.currentAdmin = admin;
         this.authService = authService;
         this.ticketService = ticketService;
+        this.commentService = commentService;
         initializeUI();
         refreshTickets();
     }
@@ -79,8 +82,17 @@ public class AdminDashboard extends JFrame {
         JPopupMenu popupMenu = new JPopupMenu();
         
         JMenuItem viewItem = new JMenuItem("View Details");
-        viewItem.addActionListener(e -> showTicketDetails(getSelectedTicket()));
-        
+        viewItem.addActionListener(e -> {
+            Ticket ticket = getSelectedTicket();
+            if (ticket != null) {
+                showTicketDetails(ticket);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "No ticket selected.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         JMenuItem inProgressItem = new JMenuItem("Mark In Progress");
         inProgressItem.addActionListener(e -> updateTicketStatus(getSelectedTicket(), Status.IN_PROGRESS));
         
@@ -130,7 +142,9 @@ public class AdminDashboard extends JFrame {
     }
 
     private void showTicketDetails(Ticket ticket) {
-        // Similar implementation as UserDashboard but with admin-specific details
+        // Show the reusable dialog with comment support
+        UserTicketDetailsDialog dialog = new UserTicketDetailsDialog(this, ticket, currentAdmin, commentService);
+        dialog.setVisible(true);
     }
 
     private void handleLogout(ActionEvent e) {

@@ -16,4 +16,6 @@ public interface CommentDAO {
     List<Comment> getCommentsByTicket(int ticketId) throws SQLException;
     boolean addComment(Comment comment) throws SQLException;
     boolean deleteComment(int commentId) throws SQLException;
+    boolean addComment(int ticketId, int userId, String message) throws SQLException;
+    List<Comment> getCommentsByTicketId(int ticketId) throws SQLException;
 }
